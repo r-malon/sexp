@@ -42,14 +42,9 @@ int main(argc,argv)
 int argc;
 char **argv;
 { char *c;
-  int swa = TRUE;
-  int swb = TRUE;
-  int swc = TRUE;
-  int swp = TRUE;
-  int sws = FALSE;
-  int swx = TRUE;
-  int swl = FALSE;
   int i;
+  bool swa = true, swb = true, swc = true, swp = true, sws = false, 
+  	swx = true, swl = false;
   sexpObject *object;
   sexpInputStream *is;
   sexpOutputStream *os;
@@ -58,18 +53,18 @@ char **argv;
   is = newSexpInputStream();
   os = newSexpOutputStream();
   /* process switches */
-  if (argc>1) swa = swb = swc = swp = sws = swx = swl = FALSE;
+  if (argc>1) swa = swb = swc = swp = sws = swx = swl = false;
   for (i=1;i<argc;i++)
     { c = argv[i];
       if (*c != '-')
 	{ printf("Unrecognized switch %s\n",c); exit(0); }
       c++;
       if (*c == 'a') /* advanced output */
-	swa = TRUE;
+	swa = true;
       else if (*c == 'b') /* base-64 output */
-	swb = TRUE;
+	swb = true;
       else if (*c == 'c') /* canonical output */
-	swc = TRUE;
+	swc = true;
       else if (*c == 'h') /* help */
 	{ 
 	  printf("%s",help);
@@ -83,7 +78,7 @@ char **argv;
 	    ErrorMessage(ERROR,"Can't open input file.",0,0);
 	}
       else if (*c == 'l') /* suppress linefeeds after output */
-	swl = TRUE;
+	swl = true;
       else if (*c == 'o') /* output file */
 	{ if (i+1<argc) i++;
 	  os->outputFile = fopen(argv[i],"w");
@@ -91,20 +86,20 @@ char **argv;
 	    ErrorMessage(ERROR,"Can't open output file.",0,0);
 	}	  
       else if (*c == 'p') /* prompt for input */
-	swp = TRUE;
+	swp = true;
       else if (*c == 's') /* treat input as one big string */
-	sws = TRUE;
+	sws = true;
       else if (*c == 'w') /* set output width */
 	{ if (i+1<argc) i++;
 	  os->maxcolumn = atoi(argv[i]);
 	}
       else if (*c == 'x') /* execute repeatedly */
-	swx = TRUE;
+	swx = true;
       else
 	{ printf("Unrecognized switch: %s\n",argv[i]); exit(0); }
     }
-  if (swa == FALSE && swb == FALSE && swc == FALSE)
-    swc = TRUE;  /* must have some output format! */
+  if (swa == false && swb == false && swc == false)
+    swc = true;  /* must have some output format! */
 
   /* main loop */
   if (swp == 0) is->getChar(is);
@@ -120,7 +115,7 @@ char **argv;
       skipWhiteSpace(is);
       if (is->nextChar == EOF) break;
 
-      if (sws == FALSE)
+      if (sws == false)
 	object = scanObject(is);
       else
 	object = scanToEOF(is);

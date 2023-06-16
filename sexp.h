@@ -1,16 +1,17 @@
-/* SEXP standard header file: sexp.h 
- * Ronald L. Rivest
- * 6/29/1997
- */
-
-/* GLOBAL DECLARATIONS */
-#define TRUE    1
-#define FALSE   0
+#ifndef SEXP_H
+#define SEXP_H
 
 /* PRINTING MODES */
 #define CANONICAL 1    /* standard for hashing and tranmission */
 #define BASE64    2    /* base64 version of canonical */
 #define ADVANCED  3    /* pretty-printed */
+/* 
+enum Mode {
+	CANONICAL=1,
+	BASE64,
+	ADVANCED
+};
+*/
 
 /* ERROR MESSAGE LEVELS */
 #define WARNING 1
@@ -18,39 +19,37 @@
 
 #define DEFAULTLINELENGTH 75
 
-typedef unsigned char octet;
-
 /* TYPES OF OBJECTS */
 #define SEXP_STRING 1
 #define SEXP_LIST   2
 
 /* sexpSimpleString */
-typedef struct sexp_simplestring { 
-  long int length;
-  long int allocatedLength;
-  octet *string;
+typedef struct sexpSimpleString { 
+	long int length;
+	long int allocatedLength;
+	uint8_t *string;
 } sexpSimpleString;
 
 /* sexpString */
-typedef struct sexp_string {
-  int type;
-  sexpSimpleString *presentationHint;
-  sexpSimpleString *string;
+typedef struct sexpString {
+	int type;
+	sexpSimpleString *presentationHint;
+	sexpSimpleString *string;
 } sexpString;
 
 /* sexpList */
 /* If first is NULL, then rest must also be NULL; this is empty list */
-typedef struct sexp_list {  
-  char type;
-  union sexp_object *first;
-  struct sexp_list  *rest;
+typedef struct sexpList {  
+	char type;
+	union sexp_object *first;
+	struct sexp_list  *rest;
 } sexpList;
 
 /* sexpObject */
 /* so we can have a pointer to something of either type */
-typedef union sexp_object {
-  sexpString string;
-  sexpList list;
+typedef union sexpObject {
+	sexpString string;
+	sexpList list;
 } sexpObject;
 
 /* sexpIter */
@@ -58,29 +57,28 @@ typedef union sexp_object {
 /* In this implementation, it is the same as a list */
 typedef sexpList sexpIter;
 
-typedef struct sexp_inputstream {
-  int nextChar;        /* character currently being scanned */
-  int byteSize;        /* 4 or 6 or 8 == currently scanning mode */
-  int bits;            /* Bits waiting to be used */
-  int nBits;           /* number of such bits waiting to be used */
-  void (*getChar)();
-  int count;           /* number of 8-bit characters output by getChar */
-  FILE *inputFile;     /* where to get input, if not stdin */
+typedef struct sexpInputStream {
+	int nextChar;        /* character currently being scanned */
+	int byteSize;        /* 4 or 6 or 8 == currently scanning mode */
+	int bits;            /* Bits waiting to be used */
+	int nBits;           /* number of such bits waiting to be used */
+	void (*getChar)();
+	int count;           /* number of 8-bit characters output by getChar */
+	FILE *inputFile;     /* where to get input, if not stdin */
 } sexpInputStream;
 
-typedef struct sexp_outputstream {
-  long int column;          /* column where next character will go */
-  long int maxcolumn;       /* max usable column, or -1 if no maximum */
-  long int indent;          /* current indentation level (starts at 0) */
-  void (*putChar)();        /* output a character */
-  void (*newLine)();        /* go to next line (and indent) */
-  int byteSize;             /* 4 or 6 or 8 depending on output mode */
-  int bits;                 /* bits waiting to go out */
-  int nBits;                /* number of bits waiting to go out */
-  long int base64Count;     /* number of hex or base64 chars printed 
-			       this region */
-  int mode;                 /* BASE64, ADVANCED, or CANONICAL */
-  FILE *outputFile;         /* where to put output, if not stdout */
+typedef struct sexpOutputStream {
+	long int column;          /* column where next character will go */
+	long int maxcolumn;       /* max usable column, or -1 if no maximum */
+	long int indent;          /* current indentation level (starts at 0) */
+	void (*putChar)();        /* output a character */
+	void (*newLine)();        /* go to next line (and indent) */
+	int byteSize;             /* 4 or 6 or 8 depending on output mode */
+	int bits;                 /* bits waiting to go out */
+	int nBits;                /* number of bits waiting to go out */
+	long int base64Count;     /* number of hex or base64 chars printed in this region */
+	int mode;                 /* BASE64, ADVANCED, or CANONICAL */
+	FILE *outputFile;         /* where to put output, if not stdout */
 } sexpOutputStream;
 
 /* Function prototypes */
@@ -91,7 +89,7 @@ void initializeMemory();
 char *sexpAlloc();
 sexpSimpleString *newSimpleString();
 long int simpleStringLength();
-octet *simpleStringString();
+uint8_t *simpleStringString();
 sexpSimpleString *reallocateSimpleString();
 void appendCharToSimpleString();
 sexpString *newSexpString();
@@ -165,3 +163,5 @@ int  advancedLengthString();
 int  advancedLengthList();
 void advancedPrintList();
 void advancedPrintObject();
+
+#endif /* SEXP_H */

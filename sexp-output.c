@@ -7,9 +7,9 @@
 #include <malloc.h>
 #include "sexp.h"
 
-static char *hexDigits = "0123456789ABCDEF";
+static const char *hexDigits = "0123456789ABCDEF";
 
-static char *base64Digits = 
+static const char *base64Digits = 
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /***********************/
@@ -173,7 +173,7 @@ sexpSimpleString *ss;
 { 
   long int len;
   long int i;
-  octet *c;
+  uint8_t *c;
   len = simpleStringLength(ss);
   c = simpleStringString(ss);
   if (c == NULL) 
@@ -263,7 +263,7 @@ sexpObject *object;
 /* TOKEN */
 
 /* canPrintAsToken(ss)
- * Returns TRUE if simple string ss can be printed as a token.
+ * Returns true if simple string ss can be printed as a token.
  * Doesn't begin with a digit, and all characters are tokenchars.
  */
 int canPrintAsToken(os,ss)
@@ -271,17 +271,17 @@ sexpOutputStream *os;
 sexpSimpleString *ss;
 {
   int i;
-  octet *c;
+  uint8_t *c;
   long int len;
   len = simpleStringLength(ss);
   c = simpleStringString(ss);
-  if (len <= 0) return(FALSE);
-  if (isDecDigit((int)*c)) return(FALSE);
+  if (len <= 0) return(false);
+  if (isDecDigit((int)*c)) return(false);
   if (os->maxcolumn > 0 && os->column + len >= os->maxcolumn)
-    return(FALSE);
+    return(false);
   for (i=0;i<len;i++)
-    if (!isTokenChar((int)(*c++))) return(FALSE);
-  return(TRUE);
+    if (!isTokenChar((int)(*c++))) return(false);
+  return(true);
 }
 
 /* advancedPrintTokenSimpleString(os,ss)
@@ -293,7 +293,7 @@ sexpOutputStream *os;
 sexpSimpleString *ss;
 { int i;
   long int len;
-  octet *c;
+  uint8_t *c;
   len = simpleStringLength(ss);
   if (os->maxcolumn>0 && os->column > (os->maxcolumn - len))
     os->newLine(os,ADVANCED);
@@ -322,7 +322,7 @@ sexpSimpleString *ss;
 { 
   long int len = simpleStringLength(ss);
   long int i;
-  octet *c;
+  uint8_t *c;
   c = simpleStringString(ss);
   if (c == NULL) 
     ErrorMessage(ERROR,"Can't print NULL string verbatim",0,0);
@@ -354,7 +354,7 @@ sexpOutputStream *os;
 sexpSimpleString *ss;
 {
   long int i,len;
-  octet *c = simpleStringString(ss);
+  uint8_t *c = simpleStringString(ss);
   len = simpleStringLength(ss);
   if (c == NULL) 
     ErrorMessage(ERROR,"Can't print NULL string base 64",0,0);
@@ -377,7 +377,7 @@ sexpOutputStream *os;
 sexpSimpleString *ss;
 {
   long int i,len;
-  octet *c = simpleStringString(ss);
+  uint8_t *c = simpleStringString(ss);
   len = simpleStringLength(ss);
   if (c == NULL) 
     ErrorMessage(ERROR,"Can't print NULL string hexadecimal",0,0);
@@ -402,20 +402,20 @@ sexpSimpleString *ss;
 /* QUOTED STRING */
 
 /* canPrintAsQuotedString(ss)
- * Returns TRUE if simple string ss can be printed as a quoted string.
+ * Returns true if simple string ss can be printed as a quoted string.
  * Must have only tokenchars and blanks.
  */
 int canPrintAsQuotedString(ss)
 sexpSimpleString *ss;
 {
   long int i, len;
-  octet *c = simpleStringString(ss);
+  uint8_t *c = simpleStringString(ss);
   len = simpleStringLength(ss);
-  if (len < 0) return(FALSE);
+  if (len < 0) return(false);
   for (i=0;i<len;i++,c++)
     if (!isTokenChar((int)(*c)) && *c != ' ') 
-      return(FALSE);
-  return(TRUE);
+      return(false);
+  return(true);
 }
 
 /* advancedPrintQuotedStringSimpleString(os,ss)
@@ -429,7 +429,7 @@ sexpOutputStream *os;
 sexpSimpleString *ss;
 { long int i;
   long int len = simpleStringLength(ss);
-  octet *c = simpleStringString(ss);
+  uint8_t *c = simpleStringString(ss);
   os->putChar(os,'\"');
   for (i=0;i<len;i++) 
     { if ( os->maxcolumn>0 && os->column >= os->maxcolumn-2 )
@@ -569,14 +569,14 @@ sexpList *list;
 void advancedPrintList(os,list)
 sexpOutputStream *os;
 sexpList *list;
-{ int vertical = FALSE;
-  int firstelement = TRUE;
+{ int vertical = false;
+  int firstelement = true;
   sexpIter *iter;
   sexpObject *object;
   os->putChar(os,'(');
   os->indent++;
   if (advancedLengthList(os,list) > os->maxcolumn - os->column)
-    vertical = TRUE;
+    vertical = true;
   iter = sexpListIter(list);
   while (iter != NULL)
     { object = sexpIterObject(iter);
@@ -588,7 +588,7 @@ sexpList *list;
 	  advancedPrintObject(os,object);
 	}
       iter = sexpIterNext(iter);
-      firstelement = FALSE;
+      firstelement = false;
     }
   if (os->maxcolumn>0 && os->column>os->maxcolumn-2)
     os->newLine(os,ADVANCED);

@@ -20,88 +20,88 @@ char hexvalue[256];         /* hexvalue[c] is value of c as a hex digit */
 char base64digit[256];      /* base64char[c] is nonzero if c is base64 digit */
 char base64value[256];      /* base64value[c] is value of c as base64 digit */
 char tokenchar[256];        /* tokenchar[c] is true if c can be in a token */
-char alpha[256];            /* alpha[c] is true if c is alphabetic A-Z a-z */
+char alpha[256];            /* alpha[c] is true if c is alphabetic /A-Za-z/ */
 
-/* initializeCharacterTables
- * initializes all of the above arrays
+/* initializeCharacterTables()
+ * Initializes all of the above arrays
  */ 
 void initializeCharacterTables()
 { int i;
   for (i=0;i<256;i++) upper[i] = i;
   for (i='a'; i<='z'; i++) upper[i] = i - 'a' + 'A';
   for (i=0;   i<=255; i++) 
-    alpha[i] = decdigit[i] = whitespace[i] = base64digit[i] = FALSE;
-  whitespace[' ']  = whitespace['\n'] = whitespace['\t'] = TRUE;
-  whitespace['\v'] = whitespace['\r'] = whitespace['\f'] = TRUE;
+    alpha[i] = decdigit[i] = whitespace[i] = base64digit[i] = false;
+  whitespace[' ']  = whitespace['\n'] = whitespace['\t'] = true;
+  whitespace['\v'] = whitespace['\r'] = whitespace['\f'] = true;
   for (i='0';i<='9';i++) 
-    { base64digit[i] = hexdigit[i] = decdigit[i] = TRUE;
+    { base64digit[i] = hexdigit[i] = decdigit[i] = true;
       decvalue[i] = hexvalue[i] = i-'0';
       base64value[i] = (i-'0')+52;
     }
   for (i='a';i<='f';i++)
-    { hexdigit[i] = hexdigit[upper[i]] = TRUE;
+    { hexdigit[i] = hexdigit[upper[i]] = true;
       hexvalue[i] = hexvalue[upper[i]] = i-'a'+10;
     }
   for (i='a';i<='z';i++) 
-    { base64digit[i] = base64digit[upper[i]] = TRUE;
-      alpha[i] = alpha[upper[i]] = TRUE;
+    { base64digit[i] = base64digit[upper[i]] = true;
+      alpha[i] = alpha[upper[i]] = true;
       base64value[i] = i-'a'+26;
       base64value[upper[i]] = i-'a';
     }
-  base64digit['+'] = base64digit['/'] = TRUE;
+  base64digit['+'] = base64digit['/'] = true;
   base64value['+'] = 62;
   base64value['/'] = 63;
   base64value['='] = 0;
-  for (i=0;i<255;i++) tokenchar[i] = FALSE;
-  for (i='a';i<='z';i++) tokenchar[i] = tokenchar[upper[i]] = TRUE;
-  for (i='0';i<='9';i++) tokenchar[i] = TRUE;
-  tokenchar['-'] = TRUE;
-  tokenchar['.'] = TRUE;
-  tokenchar['/'] = TRUE;
-  tokenchar['_'] = TRUE;
-  tokenchar[':'] = TRUE;
-  tokenchar['*'] = TRUE;
-  tokenchar['+'] = TRUE;
-  tokenchar['='] = TRUE;
+  for (i=0;i<255;i++) tokenchar[i] = false;
+  for (i='a';i<='z';i++) tokenchar[i] = tokenchar[upper[i]] = true;
+  for (i='0';i<='9';i++) tokenchar[i] = true;
+  tokenchar['-'] = true;
+  tokenchar['.'] = true;
+  tokenchar['/'] = true;
+  tokenchar['_'] = true;
+  tokenchar[':'] = true;
+  tokenchar['*'] = true;
+  tokenchar['+'] = true;
+  tokenchar['='] = true;
 }
 
 /* isWhiteSpace(c)
- * Returns TRUE if c is a whitespace character (space, tab, etc. ).
+ * Returns true if c is a whitespace character.
  */
 int isWhiteSpace(c)
 int c;
 { return ((c>=0 && c<=255) && whitespace[c]); }
 
 /* isDecDigit(c)
- * Returns TRUE if c is a decimal digit.
+ * Returns true if c is a decimal digit.
  */
 int isDecDigit(c)
 int c;
 { return ((c>=0 && c<=255) && decdigit[c]); }
 
 /* isHexDigit(c)
- * Returns TRUE if c is a hexadecimal digit.
+ * Returns true if c is a hexadecimal digit.
  */
 int isHexDigit(c)
 int c;
 { return ((c>=0 && c<=255) && hexdigit[c]); }
 
 /* isBase64Digit(c)
- * returns TRUE if c is a base64 digit A-Z,a-Z,0-9,+,/
+ * returns true if c is a base64 digit A-Z,a-Z,0-9,+,/
  */
 int isBase64Digit(c)
 int c;
 { return ((c>=0 && c<=255) && base64digit[c]); }
 
 /* isTokenChar(c)
- * Returns TRUE if c is allowed in a token
+ * Returns true if c is allowed in a token
  */
 int isTokenChar(c)
 int c;
 { return ((c>=0 && c<=255) && tokenchar[c]); }
 
 /* isAlpha(c)
- * Returns TRUE if c is alphabetic
+ * Returns true if c is alphabetic
  */
 int isAlpha(c)
 int c;
@@ -137,12 +137,12 @@ sexpInputStream *is;
     { is->byteSize = 8;
       return;
     }
-  while (TRUE)
+  while (true)
     { c = is->nextChar = fgetc(is->inputFile);
       if (c == EOF) return;
       if ((is->byteSize == 6 && (c == '|' || c == '}'))
 	  || (is->byteSize == 4 && (c == '#')))
-	/* end of region reached; return terminating character, after
+	/* End of region reached; return terminating character, after
 	   checking for unused bits */
 	{ if (is->nBits>0 && (((1<<is->nBits)-1) & is->bits) != 0)
 	    ErrorMessage(WARNING,
@@ -152,7 +152,7 @@ sexpInputStream *is;
 	  return;
 	}
       else if (is->byteSize != 8 && isWhiteSpace(c)) 
-	; /* ignore white space in hex and base64 regions */
+	; /* ignore whitespace in hex and base64 regions */
       else if (is->byteSize == 6 && c == '=') 
 	; /* ignore equals signs in base64 regions */
       else if (is->byteSize==8)
@@ -204,7 +204,7 @@ sexpInputStream *newSexpInputStream()
 /*****************************************/
 
 /* skipWhiteSpace(is)
- * Skip over any white space on the given sexpInputStream.
+ * Skip over any whitespace on the given sexpInputStream.
  */
 void skipWhiteSpace(is)
 sexpInputStream *is;
@@ -224,8 +224,8 @@ int c;
     is->getChar(is);
   else 
     ErrorMessage(ERROR, "character %x (hex) found where %c (char) expected",
-		 (int) is->nextChar,
-		 (int) c);
+		 (int)is->nextChar,
+		 (int)c);
 }
 
 /* scanToken(is,ss)
@@ -245,8 +245,8 @@ sexpSimpleString *ss;
 }
 
 /* scanToEOF(is)
- * scan one or more characters (until EOF reached)
- * return an object that is just that string
+ * Scan one or more characters (until EOF reached)
+ * Return an object that is just that string
  */
 sexpObject *scanToEOF(is)
 sexpInputStream *is;
@@ -264,7 +264,7 @@ sexpInputStream *is;
 }
 
 /* scanDecimal(is)
- * returns long integer that is value of decimal number
+ * Returns long integer that is value of decimal number
  */
 unsigned long int scanDecimal(is)
 sexpInputStream *is;
@@ -361,8 +361,7 @@ long int length;
 		      if (j<1) { is->getChar(is); c = is->nextChar; }
 		    }
 		  else 
-		    ErrorMessage(ERROR,"Hex character \\x%x... too short.",
-				 val,0);
+		    ErrorMessage(ERROR, "Hex character \\x%x... too short.", val, 0);
 		}
 	      appendCharToSimpleString(val,ss);
 	    }
@@ -377,8 +376,7 @@ long int length;
 	      if (is->nextChar != '\n') goto gotnextchar;
 	    }
 	  else
-	    ErrorMessage(WARNING,"Escape character \\%c... unknown.",
-			 c,0);
+	    ErrorMessage(WARNING, "Escape character \\%c... unknown.", c, 0);
 	} /* end of handling escape sequence */
       else 
 	appendCharToSimpleString(is->nextChar,ss);
@@ -514,9 +512,9 @@ sexpInputStream *is;
     { object = scanObject(is);
       sexpAddSexpListObject(list,object);
     }
-  while (TRUE)
+  while (true)
     { skipWhiteSpace(is);
-      if (is->nextChar == ')') /* we just grabbed last element of list */
+      if (is->nextChar == ')') /* We just grabbed last element of list */
 	{ 
 	  skipChar(is,')');
 	  closeSexpList(list);
@@ -540,7 +538,7 @@ sexpInputStream *is;
   if (is->nextChar == '{')
     {
       changeInputByteSize(is,6);     /* order of this statement and next is */
-      skipChar(is,'{');              /*   important! */
+      skipChar(is,'{');              /* Important! */
       object = scanObject(is);
       skipChar(is,'}');
       return(object);

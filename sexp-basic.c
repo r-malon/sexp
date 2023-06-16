@@ -24,11 +24,9 @@ char *msg;
 int c1, c2;
 {
   fflush(stdout);
-  printf("\n*** ");
   if (level==WARNING) printf("Warning: ");
   else if (level==ERROR) printf("Error: ");
   printf(msg,c1,c2);
-  printf(" ***\n");
   if (level==ERROR) exit(1);
 }
 
@@ -48,7 +46,7 @@ void initializeMemory()
  */
 char *sexpAlloc(n)
 int n;
-{ char *c = (char *)malloc((unsigned int) n);
+{ char *c = malloc((unsigned int) n);
   if (c == NULL) ErrorMessage(ERROR,"Error in sexpAlloc: out of memory!",0,0);
   return(c);
 }
@@ -67,7 +65,7 @@ sexpSimpleString *newSimpleString()
   ss = (sexpSimpleString *) sexpAlloc(sizeof(sexpSimpleString));
   ss->length = 0;
   ss->allocatedLength = 16;
-  ss->string = (octet *)sexpAlloc(16);
+  ss->string = (uint8_t *)sexpAlloc(16);
   return(ss);
 }
 			      
@@ -81,7 +79,7 @@ sexpSimpleString *ss;
 /* simpleStringString(ss)
  * returns pointer to character array of simple string 
  */
-octet *simpleStringString(ss)
+uint8_t *simpleStringString(ss)
 sexpSimpleString *ss;
 { return(ss->string); }
 
@@ -93,14 +91,14 @@ sexpSimpleString *reallocateSimpleString(ss)
 sexpSimpleString *ss;
 {
   int newsize, i;
-  octet *newstring;
+  uint8_t *newstring;
   if (ss==NULL) ss = newSimpleString();
   if (ss->string == NULL) 
-    ss->string = (octet *)sexpAlloc(16);
+    ss->string = (uint8_t *)sexpAlloc(16);
   else
     { 
       newsize = 16 + 3*(ss->length)/2;
-      newstring = (octet *)sexpAlloc(newsize);
+      newstring = (uint8_t *)sexpAlloc(newsize);
       for (i=0;i<ss->length;i++) newstring[i] = ss->string[i];
       /* zeroize string before freeing; as it may be sensitive */
       for (i=0;i<ss->allocatedLength;i++) ss->string[i] = 0;
@@ -122,7 +120,7 @@ sexpSimpleString *ss;
   if (ss==NULL) ss = newSimpleString();
   if (ss->string == NULL || ss->length == ss->allocatedLength )
     ss = reallocateSimpleString(ss);
-  ss->string[ss->length] = (octet) (c & 0xFF);
+  ss->string[ss->length] = (uint8_t) (c & 0xFF);
   ss->length++;
 }
 
@@ -260,13 +258,13 @@ sexpIter *iter;
 
 int isObjectString(object)
 sexpObject *object;
-{ if (((sexpString *)object)->type == SEXP_STRING) return(TRUE);
-  else                                             return(FALSE);
+{ if (((sexpString *)object)->type == SEXP_STRING) return(true);
+  else                                             return(false);
 }
 
 int isObjectList(object)
 sexpObject *object;
-{ if (((sexpList *)object)->type == SEXP_LIST) return(TRUE);
-  else                                         return(FALSE);
+{ if (((sexpList *)object)->type == SEXP_LIST) return(true);
+  else                                         return(false);
 }
 
