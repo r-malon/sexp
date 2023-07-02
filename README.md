@@ -1,6 +1,6 @@
-# SEXP---(S-expressions)
+# SEXP (S-expressions)
 ---
-(from http://people.csail.mit.edu/rivest/sexp.html)
+(from https://web.archive.org/web/20230305073119/people.csail.mit.edu/rivest/sexp.html)
 ---
 
 S-expressions are a data structure for representing complex data. They are a variation on LISP S-expressions. (Lisp was invented by John McCarthy).
@@ -19,7 +19,7 @@ We are currently merging the designs to form SPKI/SDSI 2.0. This design will use
 
 [SEXP IETF draft](https://datatracker.ietf.org/doc/draft-rivest-sexp/)
 
-The following code reads and parses S-expressions. It also prints out the S-expressions in a variety of formats. (Note that most applications will not need anything but the simple canonical and transport formats; the code here is considerably more complex because it also supports the advanced format, both for input and for output.) The "sexp-main" program also contains some documentation on running the program. (Or just type "sexp -h" to get the help print-out.) The code is available under the MIT License.
+The following code reads and parses S-expressions. It also prints out the S-expressions in a variety of formats. (Note that most applications will not need anything but the simple canonical and transport formats; the code here is considerably more complex because it also supports the advanced format, both for input and for output). The code is available under the MIT License.
 
 - [sexp.h](sexp.h)
 - [sexp-basic.c](sexp-basic.c)
@@ -29,10 +29,13 @@ The following code reads and parses S-expressions. It also prints out the S-expr
 
 Here are some sample inputs and outputs (warning: while these look like SDSI/SPKI files, they are only approximations).
 
-- [canonical](sexp-sample-c)
-- [transport](sexp-sample-b)
-- [advanced](sexp-sample-a)
+- [canonical](samples/sample-c)
+- [transport](samples/sample-b)
+- [advanced](samples/sample-a)
 
+## Help
+
+```
 The program 'sexp' reads, parses, and prints out S-expressions.
 INPUT:
 stdin is read by default, but this can be changed:
@@ -58,3 +61,4 @@ There is normally a line-width of 75 on output, but:
                       (0 implies no line-width constraint)
 The default switches are: -p -a -b -c -x
 Typical usage: cat certificate-file | sexp -a -x
+```
