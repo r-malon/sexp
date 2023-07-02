@@ -1,0 +1,44 @@
+.Dd $Mdocdate: July 2 2023 $
+.Dt SEXP 1
+.Os
+.Sh NAME
+.Nm sexp
+.Nd reads, parses, and prints out S-expressions
+.Sh SYNOPSIS
+.Nm sexp
+.Op Fl abcilopswx
+.Sh DESCRIPTION
+The
+.Nm
+utility reads, parses, and prints out S-expressions.
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl a
+Write output in advanced transport format.
+.It Fl b
+Write output in Base64 output format.
+.It Fl c
+Write output in canonical format.
+.It Fl i Ar file
+Reads from
+.Ar file
+instead of stdin.
+.It Fl l
+Suppress linefeeds after output.
+.It Fl o Ar file
+Writes to
+.Ar file
+instead of stdout.
+.It Fl p
+Prompts user for console input.
+.It Fl s
+Reads input up to EOF as a single string.
+.It Fl w Ar width
+Changes line width to specified width.
+.It Fl x
+Execute main loop repeatedly until EOF.
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh EXAMPLES
+.Dl $ cat certificate-file | sexp -a -x

@@ -17,11 +17,9 @@ We are currently merging the designs to form SPKI/SDSI 2.0. This design will use
 
 ## References and Documentation
 
-[SEXP 1.0 guide(text)](Sexp.txt)
+[SEXP IETF draft](https://datatracker.ietf.org/doc/draft-rivest-sexp/)
 
-C code
-
-The following code reads and parses S-expressions. It also prints out the S-expressions in a variety of formats. (Note that most applications will not need anything but the simple canonical and transport formats; the code here is considerably more complex because it also supports the advanced format, both for input and for output.) The "sexp-main" program also contains some documentation on running the program. (Or just type "sexp -h" to get the help print-out.) The code is available under the "MIT License" (open source).
+The following code reads and parses S-expressions. It also prints out the S-expressions in a variety of formats. (Note that most applications will not need anything but the simple canonical and transport formats; the code here is considerably more complex because it also supports the advanced format, both for input and for output.) The "sexp-main" program also contains some documentation on running the program. (Or just type "sexp -h" to get the help print-out.) The code is available under the MIT License.
 
 - [sexp.h](sexp.h)
 - [sexp-basic.c](sexp-basic.c)
@@ -31,6 +29,32 @@ The following code reads and parses S-expressions. It also prints out the S-expr
 
 Here are some sample inputs and outputs (warning: while these look like SDSI/SPKI files, they are only approximations).
 
-- canonical (sexp-sample-c)
-- transport (sexp-sample-b)
-- advanced  (sexp-sample-a)
+- [canonical](sexp-sample-c)
+- [transport](sexp-sample-b)
+- [advanced](sexp-sample-a)
+
+The program 'sexp' reads, parses, and prints out S-expressions.
+INPUT:
+stdin is read by default, but this can be changed:
+  -i filename      -- takes input from file instead.
+  -p               -- prompts user for console input
+Input is normally parsed, but this can be changed:
+  -s               -- treat input up to EOF as a single string
+CONTROL LOOP:
+The main routine typically reads one S-expression, prints it out again, 
+and stops.  This may be modified:
+  -x               -- execute main loop repeatedly until EOF
+OUTPUT:
+Output is normally written to stdout, but this can be changed:
+  -o filename      -- Write output to file instead
+The output format is normally canonical, but this can be changed:
+  -a               -- Write output in advanced transport format
+  -b               -- Write output in Base64 output format
+  -c               -- Write output in canonical format
+  -l               -- suppress linefeeds after output
+More than one output format can be requested at once.
+There is normally a line-width of 75 on output, but:
+  -w width         -- changes line width to specified width.
+                      (0 implies no line-width constraint)
+The default switches are: -p -a -b -c -x
+Typical usage: cat certificate-file | sexp -a -x
