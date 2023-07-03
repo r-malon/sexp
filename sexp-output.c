@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "sexp.h"
 
 static const char *hexDigits = "0123456789ABCDEF";
@@ -54,10 +53,10 @@ void
 changeOutputByteSize(sexpOutputStream *os, int newByteSize, int mode)
 {
 	if (newByteSize != 4 && newByteSize != 6 && newByteSize != 8)
-		ErrorMessage(ERROR, "Illegal output base %d.", newByteSize, 0);
+		err(1, "Illegal output base %d.", newByteSize);
 	if (newByteSize != 8 && os->byteSize != 8)
-		ErrorMessage(ERROR, "Illegal change of output byte size from %d to %d.",
-					 os->byteSize, newByteSize);
+		err(1, "Illegal change of output byte size from %d to %d.",
+			os->byteSize, newByteSize);
 	os->byteSize = newByteSize;
 	os->nBits = 0;
 	os->bits = 0;
@@ -116,7 +115,7 @@ sexpOutputStream *
 newSexpOutputStream()
 {
 	sexpOutputStream *os;
-	os = (sexpOutputStream *) sexpAlloc(sizeof (sexpOutputStream));
+	os = malloc(sizeof (sexpOutputStream));
 	os->column = 0;
 	os->maxcolumn = DEFAULTLINELENGTH;
 	os->indent = 0;
@@ -163,7 +162,7 @@ canonicalPrintVerbatimSimpleString(sexpOutputStream *os, sexpSimpleString *ss)
 	len = simpleStringLength(ss);
 	c = simpleStringString(ss);
 	if (c == NULL)
-		ErrorMessage(ERROR, "Can't print NULL string verbatim", 0, 0);
+		err(1, "%s", "Can't print NULL string verbatim");
 	/* print out len */
 	printDecimal(os, len);
 	varPutChar(os, ':');
@@ -187,7 +186,7 @@ canonicalPrintString(sexpOutputStream *os, sexpString *s)
 	}
 	ss = sexpStringString(s);
 	if (ss == NULL)
-		ErrorMessage(ERROR, "NULL string can't be printed.", 0, 0);
+		err(1, "%s", "NULL string can't be printed.");
 	canonicalPrintVerbatimSimpleString(os, ss);
 }
 
@@ -222,7 +221,7 @@ canonicalPrintObject(sexpOutputStream *os, sexpObject *object)
 	else if (isObjectList(object))
 		canonicalPrintList(os, (sexpList *) object);
 	else
-		ErrorMessage(ERROR, "NULL object can't be printed.", 0, 0);
+		err(1, "%s", "NULL object can't be printed.");
 }
 
 /* *************/
@@ -313,7 +312,7 @@ advancedPrintVerbatimSimpleString(sexpOutputStream *os, sexpSimpleString *ss)
 	uint8_t *c;
 	c = simpleStringString(ss);
 	if (c == NULL)
-		ErrorMessage(ERROR, "Can't print NULL string verbatim", 0, 0);
+		err(1, "%s", "Can't print NULL string verbatim");
 	if (os->maxcolumn > 0 && os->column > (os->maxcolumn - len))
 		os->newLine(os, ADVANCED);
 	printDecimal(os, len);
@@ -349,7 +348,7 @@ advancedPrintBase64SimpleString(sexpOutputStream *os, sexpSimpleString *ss)
 	uint8_t *c = simpleStringString(ss);
 	len = simpleStringLength(ss);
 	if (c == NULL)
-		ErrorMessage(ERROR, "Can't print NULL string base 64", 0, 0);
+		err(1, "%s", "Can't print NULL string base 64");
 	varPutChar(os, '|');
 	changeOutputByteSize(os, 6, ADVANCED);
 	for (i = 0; i < len; i++)
@@ -371,7 +370,7 @@ advancedPrintHexSimpleString(sexpOutputStream *os, sexpSimpleString *ss)
 	uint8_t *c = simpleStringString(ss);
 	len = simpleStringLength(ss);
 	if (c == NULL)
-		ErrorMessage(ERROR, "Can't print NULL string hexadecimal", 0, 0);
+		err(1, "%s", "Can't print NULL string hexadecimal");
 	os->putChar(os, '#');
 	changeOutputByteSize(os, 4, ADVANCED);
 	for (i = 0; i < len; i++)
@@ -463,9 +462,8 @@ advancedPrintSimpleString(sexpOutputStream *os, sexpSimpleString *ss)
 	else if (os->byteSize == 8)
 		advancedPrintBase64SimpleString(os, ss);
 	else
-		ErrorMessage(ERROR, 
-			"Can't print advanced mode with restricted output character set.",
-			0, 0);
+		err(1, "%s", 
+			"Can't print advanced mode with restricted output character set.");
 }
 
 /* advancedPrintString(os,s)
@@ -482,7 +480,7 @@ advancedPrintString(sexpOutputStream *os, sexpString *s)
 		os->putChar(os, ']');
 	}
 	if (ss == NULL)
-		ErrorMessage(ERROR, "NULL string can't be printed.", 0, 0);
+		err(1, "%s", "NULL string can't be printed.");
 	advancedPrintSimpleString(os, ss);
 }
 
@@ -607,5 +605,5 @@ advancedPrintObject(sexpOutputStream *os, sexpObject *object)
 	else if (isObjectList(object))
 		advancedPrintList(os, (sexpList *) object);
 	else
-		ErrorMessage(ERROR, "NULL object can't be printed.", 0, 0);
+		err(1, "%s", "NULL object can't be printed.");
 }

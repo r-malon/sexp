@@ -1,30 +1,32 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+
+#if defined(BSD)
+#include <err.h>
+#else
+/* Adapt from NetBSD or OpenBSD implementation */
+/* https://nxr.netbsd.org/xref/src/lib/libc/gen/err.c */
+#endif
 
 #ifndef SEXP_H
 #define SEXP_H
 
-/* PRINTING MODES */
-#define CANONICAL 1		/* standard for hashing and tranmission */
-#define BASE64    2		/* base64 version of canonical */
-#define ADVANCED  3		/* pretty-printed */
-/* 
-enum Mode {
-	CANONICAL=1,
-	BASE64,
-	ADVANCED
-};
-*/
-
-/* ERROR MESSAGE LEVELS */
-#define WARNING 1
-#define ERROR 2
-
 #define DEFAULTLINELENGTH 75
 
+/* PRINTING MODES */
+enum Mode {
+	CANONICAL=1,	/* Standard for hashing and tranmission */
+	BASE64,			/* Base64 version of canonical */
+	ADVANCED		/* Pretty-printed */
+};
+
 /* TYPES OF OBJECTS */
-#define SEXP_STRING 1
-#define SEXP_LIST   2
+enum ObjectType {
+	SEXP_STRING=1,
+	SEXP_LIST
+};
 
 typedef struct sexpSimpleString {
 	long int length;
@@ -33,14 +35,14 @@ typedef struct sexpSimpleString {
 } sexpSimpleString;
 
 typedef struct sexpString {
-	int type;
+	enum ObjectType type;
 	sexpSimpleString *presentationHint;
 	sexpSimpleString *string;
 } sexpString;
 
 /* If first is NULL, then rest must also be NULL; this is empty list */
 typedef struct sexpList {
-	char type;
+	enum ObjectType type;
 	union sexpObject *first;
 	struct sexpList *rest;
 } sexpList;
@@ -75,16 +77,14 @@ typedef struct sexpOutputStream {
 	int bits;				/* bits waiting to go out */
 	int nBits;				/* number of bits waiting to go out */
 	long int base64Count;	/* number of hex or base64 chars printed in this region */
-	int mode;				/* BASE64, ADVANCED, or CANONICAL */
+	enum Mode mode;
 	FILE *outputFile;		/* where to put output, if not stdout */
 } sexpOutputStream;
 
 /* Function prototypes */
 
 /* sexp-basic */
-void ErrorMessage();
 void initializeMemory();
-char *sexpAlloc();
 sexpSimpleString *newSimpleString();
 long int simpleStringLength();
 uint8_t *simpleStringString();

@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "sexp.h"
 
 /**************************************/
@@ -160,8 +159,7 @@ getChar(sexpInputStream *is)
 			   checking for unused bits */
 		{
 			if (is->nBits > 0 && (((1 << is->nBits) - 1) & is->bits) != 0)
-				ErrorMessage(WARNING,
-					"%d-bit region ended with %d unused bits left-over",
+				warn("%d-bit region ended with %d unused bits left-over",
 					is->byteSize, is->nBits);
 			changeInputByteSize(is, 8);
 			return;
@@ -178,8 +176,7 @@ getChar(sexpInputStream *is)
 			else if (is->byteSize == 4 && isHexDigit(c))
 				is->bits = is->bits | hexvalue[c];
 			else
-				ErrorMessage(ERROR,
-					"character %c found in %d-bit coding region",
+				err(1, "character %c found in %d-bit coding region",
 					(int) is->nextChar, is->byteSize);
 			if (is->nBits >= 8) {
 				is->nextChar = (is->bits >> (is->nBits - 8)) & 0xFF;
@@ -200,7 +197,7 @@ sexpInputStream *
 newSexpInputStream()
 {
 	sexpInputStream *is;
-	is = (sexpInputStream *) sexpAlloc(sizeof (sexpInputStream));
+	is = malloc(sizeof (sexpInputStream));
 	is->nextChar = ' ';
 	is->getChar = getChar;
 	is->count = -1;
@@ -235,8 +232,7 @@ skipChar(sexpInputStream *is, int c)
 	if (is->nextChar == c)
 		is->getChar(is);
 	else
-		ErrorMessage(ERROR, 
-			"character %x (hex) found where %c (char) expected",
+		err(1, "character %x (hex) found where %c (char) expected",
 			(int) is->nextChar, (int) c);
 }
 
@@ -284,8 +280,7 @@ scanDecimal(sexpInputStream *is)
 		value = value * 10 + decvalue[is->nextChar];
 		is->getChar(is);
 		if (i++ > 8)
-			ErrorMessage(ERROR, 
-				"Decimal number %d... too long.", (int) value, 0);
+			err(1, "Decimal number %d... too long.", (int) value);
 	}
 	return value;
 }
@@ -300,7 +295,7 @@ scanVerbatimString(sexpInputStream *is, sexpSimpleString *ss, long int length)
 	skipWhiteSpace(is);
 	skipChar(is, ':');
 	if (length == -1L)			/* no length was specified */
-		ErrorMessage(ERROR, "Verbatim string had no declared length.", 0, 0);
+		err(1, "%s", "Verbatim string had no declared length.");
 	for (i = 0; i < length; i++) {
 		appendCharToSimpleString(is->nextChar, ss);
 		is->getChar(is);
@@ -324,8 +319,7 @@ scanQuotedString(sexpInputStream *is, sexpSimpleString *ss, long int length)
 				skipChar(is, '\"');
 				return;
 			} else
-				ErrorMessage(ERROR,
-					"Quoted string ended too early. Declared length was %d",
+				err(1, "Quoted string ended too early. Declared length was %d",
 					(int) length, 0);
 		} else if (is->nextChar == '\\') {	/* handle escape sequence */
 			is->getChar(is);
@@ -359,13 +353,10 @@ scanQuotedString(sexpInputStream *is, sexpSimpleString *ss, long int length)
 							c = is->nextChar;
 						}
 					} else
-						ErrorMessage(ERROR,
-							"Octal character \\%o... too short.", val,
-							0);
+						err(1, "Octal character \\%o... too short.", val);
 				}
 				if (val > 255)
-					ErrorMessage(ERROR, "Octal character \\%o... too big.",
-						val, 0);
+					err(1, "Octal character \\%o... too big.", val);
 				appendCharToSimpleString(val, ss);
 			} else if (c == 'x') {	/* hexadecimal number */
 				int j, val;
@@ -380,8 +371,7 @@ scanQuotedString(sexpInputStream *is, sexpSimpleString *ss, long int length)
 							c = is->nextChar;
 						}
 					} else
-						ErrorMessage(ERROR, 
-							"Hex character \\x%x... too short.", val, 0);
+						err(1, "Hex character \\x%x... too short.", val);
 				}
 				appendCharToSimpleString(val, ss);
 			} else if (c == '\n') {	/* ignore backslash line feed */
@@ -395,8 +385,7 @@ scanQuotedString(sexpInputStream *is, sexpSimpleString *ss, long int length)
 				if (is->nextChar != '\n')
 					goto gotnextchar;
 			} else
-				ErrorMessage(WARNING, 
-					"Escape character \\%c... unknown.", c, 0);
+				warn("Escape character \\%c... unknown.", c);
 		}	/* end of handling escape sequence */
 		else
 			appendCharToSimpleString(is->nextChar, ss);
@@ -421,8 +410,7 @@ scanHexString(sexpInputStream *is, sexpSimpleString *ss, long int length)
 	}
 	skipChar(is, '#');
 	if (simpleStringLength(ss) != length && length >= 0)
-		ErrorMessage(WARNING,
-			"Hex string has length %d different than declared length %d",
+		warn("Hex string has length %d different than declared length %d",
 			(int) simpleStringLength(ss), (int) length);
 }
 
@@ -441,8 +429,7 @@ scanBase64String(sexpInputStream *is, sexpSimpleString *ss, long int length)
 	}
 	skipChar(is, '|');
 	if (simpleStringLength(ss) != length && length >= 0)
-		ErrorMessage(WARNING,
-			"Base64 string has length %d different than declared length %d",
+		warn("Base64 string has length %d different than declared length %d",
 			(int) simpleStringLength(ss), (int) length);
 }
 
@@ -482,10 +469,10 @@ scanSimpleString(sexpInputStream *is)
 		else if (is->nextChar == ':')
 			scanVerbatimString(is, ss, length);
 	} else
-		ErrorMessage(ERROR, "illegal character at position %d: %d (decimal)",
-					 is->count, is->nextChar);
+		err(1, "illegal character at position %d: %d (decimal)",
+			is->count, is->nextChar);
 	if (simpleStringLength(ss) == 0)
-		ErrorMessage(WARNING, "Simple string has zero length.", 0, 0);
+		warn("%s", "Simple string has zero length.");
 	return ss;
 }
 
@@ -525,7 +512,7 @@ scanList(sexpInputStream *is)
 	skipWhiteSpace(is);
 	list = newSexpList();
 	if (is->nextChar == ')') {
-	/* ErrorMessage(ERROR,"List () with no contents is illegal.",0,0); */
+	/* err(1, "List () with no contents is illegal."); */
 		;	/* OK */
 	} else {
 		object = scanObject(is);

@@ -1,51 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "sexp.h"
-
-/******************/
-/* ERROR MESSAGES */
-/******************/
-
-/* ErrorMessage(level, msg, c1, c2)
- * Prints error message on stderr (msg is a format string)
- * c1 and c2 are (optional) integer parameters for the message.
- * Terminates iff level==ERROR, otherwise returns.
- */
-void
-ErrorMessage(int level, char *msg, int c1, int c2)
-{
-	fflush(stdout);
-	if (level == WARNING)
-		fprintf(stderr, "Warning: ");
-	else if (level == ERROR)
-		fprintf(stderr, "Error: ");
-	fprintf(stderr, msg, c1, c2);
-	if (level == ERROR)
-		exit(1);
-}
-
-/**********************/
-/* STORAGE ALLOCATION */
-/**********************/
 
 /* initializeMemory()
  * Take care of memory initialization 
  */
 void
 initializeMemory() {} /* nothing in this implementation -- use malloc */
-
-/* sexpAlloc(n)
- * Allocates n bytes of storage. 
- * Terminates execution if no memory available.
- */
-char *
-sexpAlloc(int n)
-{
-	char *c = malloc((unsigned int) n);
-	if (c == NULL)
-		ErrorMessage(ERROR, "Error in sexpAlloc: out of memory!", 0, 0);
-	return c;
-}
 
 /***********************************/
 /* SEXP SIMPLE STRING MANIPULATION */
@@ -59,10 +18,10 @@ sexpSimpleString *
 newSimpleString()
 {
 	sexpSimpleString *ss;
-	ss = (sexpSimpleString *) sexpAlloc(sizeof (sexpSimpleString));
+	ss = malloc(sizeof (sexpSimpleString));
 	ss->length = 0;
 	ss->allocatedLength = 16;
-	ss->string = (uint8_t *) sexpAlloc(16);
+	ss->string = malloc(16);
 	return ss;
 }
 
@@ -96,10 +55,10 @@ reallocateSimpleString(sexpSimpleString *ss)
 	if (ss == NULL)
 		ss = newSimpleString();
 	if (ss->string == NULL)
-		ss->string = (uint8_t *) sexpAlloc(16);
+		ss->string = malloc(16);
 	else {
 		newsize = 16 + 3 * (ss->length) / 2;
-		newstring = (uint8_t *) sexpAlloc(newsize);
+		newstring = malloc(newsize);
 		for (i = 0; i < ss->length; i++)
 			newstring[i] = ss->string[i];
 		/* Zero string before freeing, as it may be sensitive */
@@ -139,7 +98,7 @@ sexpString *
 newSexpString()
 {
 	sexpString *s;
-	s = (sexpString *) sexpAlloc(sizeof (sexpString));
+	s = malloc(sizeof (sexpString));
 	s->type = SEXP_STRING;
 	s->presentationHint = NULL;
 	s->string = NULL;
@@ -201,7 +160,7 @@ sexpList *
 newSexpList()
 {
 	sexpList *list;
-	list = (sexpList *) sexpAlloc(sizeof (sexpList));
+	list = malloc(sizeof (sexpList));
 	list->type = SEXP_LIST;
 	list->first = NULL;
 	list->rest = NULL;
@@ -267,22 +226,14 @@ sexpIterObject(sexpIter *iter)
 	return ((sexpList *) iter)->first;
 }
 
-/****************************/
-/* SEXP OBJECT MANIPULATION */
-/****************************/
-
 int
 isObjectString(sexpObject *object)
 {
-	if (((sexpString *) object)->type == SEXP_STRING)
-		return true;
-	return false;
+	return ((sexpString *) object)->type == SEXP_STRING;
 }
 
 int
 isObjectList(sexpObject *object)
 {
-	if (((sexpList *) object)->type == SEXP_LIST)
-		return true;
-	return false;
+	return ((sexpList *) object)->type == SEXP_LIST;
 }
