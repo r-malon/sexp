@@ -50,7 +50,7 @@ simpleStringString(sexpSimpleString *ss)
 sexpSimpleString *
 reallocateSimpleString(sexpSimpleString *ss)
 {
-	int newsize, i;
+	size_t newsize;
 	uint8_t *newstring;
 	if (ss == NULL)
 		ss = newSimpleString();
@@ -59,11 +59,9 @@ reallocateSimpleString(sexpSimpleString *ss)
 	else {
 		newsize = 16 + 3 * (ss->length) / 2;
 		newstring = malloc(newsize);
-		for (i = 0; i < ss->length; i++)
-			newstring[i] = ss->string[i];
+		memcpy(newstring, ss->string, ss->allocatedLength);
 		/* Zero string before freeing, as it may be sensitive */
-		for (i = 0; i < ss->allocatedLength; i++)
-			ss->string[i] = 0;
+		memset(ss->string, 0, ss->allocatedLength);
 		free(ss->string);
 		ss->string = newstring;
 		ss->allocatedLength = newsize;

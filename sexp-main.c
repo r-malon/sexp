@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "sexp.h"
-
 
 int
 main(int argc, char **argv)
@@ -20,6 +17,7 @@ main(int argc, char **argv)
 	/* process switches */
 	if (argc > 1)
 		swa = swb = swc = swp = sws = swx = swl = false;
+
 	for (i = 1; i < argc; i++) {
 		c = argv[i];
 		if (*c != '-') {
@@ -139,5 +137,6 @@ main(int argc, char **argv)
 			fflush(stdout);
 		}
 	}
+
 	return 0;
 }

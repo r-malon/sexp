@@ -5,7 +5,6 @@
 /**************************************/
 
 char upper[256];		/* upper[c] is upper case version of c */
-char whitespace[256];	/* whitespace[c] is nonzero if c is whitespace */
 char decdigit[256];		/* decdigit[c] is nonzero if c is a dec digit */
 char decvalue[256];		/* decvalue[c] is value of c as dec digit */
 char hexdigit[256];		/* hexdigit[c] is nonzero if c is a hex digit */
@@ -27,9 +26,7 @@ initializeCharacterTables()
 	for (i = 'a'; i <= 'z'; i++)
 		upper[i] = i - 'a' + 'A';
 	for (i = 0; i <= 255; i++)
-		alpha[i] = decdigit[i] = whitespace[i] = base64digit[i] = false;
-	whitespace[' '] = whitespace['\n'] = whitespace['\t'] = 
-		whitespace['\v'] = whitespace['\r'] = whitespace['\f'] = true;
+		alpha[i] = decdigit[i] = base64digit[i] = false;
 	for (i = '0'; i <= '9'; i++) {
 		base64digit[i] = hexdigit[i] = decdigit[i] = true;
 		decvalue[i] = hexvalue[i] = i - '0';
@@ -65,35 +62,8 @@ initializeCharacterTables()
 	tokenchar['='] = true;
 }
 
-/* isWhiteSpace(c)
- * Returns true if c is a whitespace character.
- */
-int
-isWhiteSpace(int c)
-{
-	return (c >= 0 && c <= 255) && whitespace[c];
-}
-
-/* isDecDigit(c)
- * Returns true if c is a decimal digit.
- */
-int
-isDecDigit(int c)
-{
-	return (c >= 0 && c <= 255) && decdigit[c];
-}
-
-/* isHexDigit(c)
- * Returns true if c is a hexadecimal digit.
- */
-int
-isHexDigit(int c)
-{
-	return (c >= 0 && c <= 255) && hexdigit[c];
-}
-
 /* isBase64Digit(c)
- * returns true if c is a base64 digit A-Z,a-Z,0-9,+,/
+ * returns true if c is a Base64 digit A-Za-Z0-9+/
  */
 int
 isBase64Digit(int c)
@@ -108,15 +78,6 @@ int
 isTokenChar(int c)
 {
 	return (c >= 0 && c <= 255) && tokenchar[c];
-}
-
-/* isAlpha(c)
- * Returns true if c is alphabetic
- */
-int
-isAlpha(int c)
-{
-	return (c >= 0 && c <= 255) && alpha[c];
 }
 
 /**********************/
@@ -139,7 +100,7 @@ changeInputByteSize(sexpInputStream *is, int newByteSize)
  * getChar places next 8-bit character into is->nextChar.
  * It also updates the count of number of 8-bit characters read.
  * The value EOF is obtained when no more input is available.  
- * This code handles 4-bit/6-bit/8-bit channels.
+ * This code handles 4/6/8-bit channels.
  */
 void
 getChar(sexpInputStream *is)
@@ -149,22 +110,21 @@ getChar(sexpInputStream *is)
 		is->byteSize = 8;
 		return;
 	}
-	while (true) {
-		c = is->nextChar = fgetc(is->inputFile);
-		if (c == EOF)
-			return;
+	while ((c = is->nextChar = fgetc(is->inputFile)) != EOF) {
+		/* End of region reached; return terminating character, after
+			checking for unused bits */
 		if ((is->byteSize == 6 && (c == '|' || c == '}'))
 			|| (is->byteSize == 4 && (c == '#')))
-			/* End of region reached; return terminating character, after
-			   checking for unused bits */
 		{
 			if (is->nBits > 0 && (((1 << is->nBits) - 1) & is->bits) != 0)
 				warn("%d-bit region ended with %d unused bits left-over",
 					is->byteSize, is->nBits);
 			changeInputByteSize(is, 8);
 			return;
-		} else if (is->byteSize != 8 && isWhiteSpace(c));	/* ignore whitespace in hex and base64 regions */
-		else if (is->byteSize == 6 && c == '=');			/* ignore equals signs in base64 regions */
+		/* ignore whitespace in hex and Base64 regions */
+		} else if (is->byteSize != 8 && isspace(c));
+		/* ignore equals sign in Base64 regions */
+		else if (is->byteSize == 6 && c == '=');
 		else if (is->byteSize == 8) {
 			is->count++;
 			return;
@@ -173,7 +133,7 @@ getChar(sexpInputStream *is)
 			is->nBits += is->byteSize;
 			if (is->byteSize == 6 && isBase64Digit(c))
 				is->bits = is->bits | base64value[c];
-			else if (is->byteSize == 4 && isHexDigit(c))
+			else if (is->byteSize == 4 && isxdigit(c))
 				is->bits = is->bits | hexvalue[c];
 			else
 				err(1, "character %c found in %d-bit coding region",
@@ -190,7 +150,7 @@ getChar(sexpInputStream *is)
 
 /* newSexpInputStream()
  * Creates and initializes a new sexpInputStream object.
- * (Prefixes stream with one blank, and initializes stream
+ * (Prefixes stream with one blank and initializes it,
  *  so that it reads from standard input.)
  */
 sexpInputStream *
@@ -218,13 +178,13 @@ newSexpInputStream()
 void
 skipWhiteSpace(sexpInputStream *is)
 {
-	while (isWhiteSpace(is->nextChar))
+	while (isspace(is->nextChar))
 		is->getChar(is);
 }
 
 /* skipChar(is, c)
  * Skip the following input character on input stream is, if it is
- * equal to the character c.  If it is not equal, then an error occurs.
+ * equal to the character c. If it is not equal, then an error occurs.
  */
 void
 skipChar(sexpInputStream *is, int c)
@@ -237,7 +197,7 @@ skipChar(sexpInputStream *is, int c)
 }
 
 /* scanToken(is, ss)
- * scan one or more characters into simple string ss as a token.
+ * Scan one or more characters into simple string ss as a token.
  */
 void
 scanToken(sexpInputStream *is, sexpSimpleString *ss)
@@ -276,7 +236,7 @@ scanDecimal(sexpInputStream *is)
 {
 	unsigned long int value = 0L;
 	int i = 0;
-	while (isDecDigit(is->nextChar)) {
+	while (isdigit(is->nextChar)) {
 		value = value * 10 + decvalue[is->nextChar];
 		is->getChar(is);
 		if (i++ > 8)
@@ -294,7 +254,7 @@ scanVerbatimString(sexpInputStream *is, sexpSimpleString *ss, long int length)
 	long int i = 0L;
 	skipWhiteSpace(is);
 	skipChar(is, ':');
-	if (length == -1L)			/* no length was specified */
+	if (length == -1L)	/* no length was specified */
 		err(1, "%s", "Verbatim string had no declared length.");
 	for (i = 0; i < length; i++) {
 		appendCharToSimpleString(is->nextChar, ss);
@@ -320,8 +280,8 @@ scanQuotedString(sexpInputStream *is, sexpSimpleString *ss, long int length)
 				return;
 			} else
 				err(1, "Quoted string ended too early. Declared length was %d",
-					(int) length, 0);
-		} else if (is->nextChar == '\\') {	/* handle escape sequence */
+					(int) length);
+		} else if (is->nextChar == '\\') {	/* handle C escape sequence */
 			is->getChar(is);
 			c = is->nextChar;
 			if (c == 'b')
@@ -347,7 +307,7 @@ scanQuotedString(sexpInputStream *is, sexpSimpleString *ss, long int length)
 				val = 0;
 				for (j = 0; j < 3; j++) {
 					if (c >= '0' && c <= '7') {
-						val = ((val << 3) | (c - '0'));
+						val = (val << 3) | (c - '0');
 						if (j < 2) {
 							is->getChar(is);
 							c = is->nextChar;
@@ -364,8 +324,8 @@ scanQuotedString(sexpInputStream *is, sexpSimpleString *ss, long int length)
 				is->getChar(is);
 				c = is->nextChar;
 				for (j = 0; j < 2; j++) {
-					if (isHexDigit(c)) {
-						val = ((val << 4) | hexvalue[c]);
+					if (isxdigit(c)) {
+						val = (val << 4) | hexvalue[c];
 						if (j < 1) {
 							is->getChar(is);
 							c = is->nextChar;
@@ -449,14 +409,14 @@ scanSimpleString(sexpInputStream *is)
 	 * before checking the other cases, so that a token may begin with ":",
 	 * which would otherwise be treated as a verbatim string missing a length.
 	 */
-	if (isTokenChar(is->nextChar) && !isDecDigit(is->nextChar))
+	if (isTokenChar(is->nextChar) && !isdigit(is->nextChar))
 		scanToken(is, ss);
-	else if (isDecDigit(is->nextChar)
+	else if (isdigit(is->nextChar)
 			 || is->nextChar == '\"'
 			 || is->nextChar == '#'
 			 || is->nextChar == '|'
 			 || is->nextChar == ':') {
-		if (isDecDigit(is->nextChar))
+		if (isdigit(is->nextChar))
 			length = scanDecimal(is);
 		else
 			length = -1L;
@@ -542,7 +502,7 @@ scanObject(sexpInputStream *is)
 	skipWhiteSpace(is);
 	if (is->nextChar == '{') {
 		changeInputByteSize(is, 6);	/* order of this statement and next is */
-		skipChar(is, '{');		/* Important! */
+		skipChar(is, '{');			/* Important! */
 		object = scanObject(is);
 		skipChar(is, '}');
 		return object;

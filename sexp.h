@@ -2,13 +2,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-
-#if defined(BSD)
+#include <string.h>
+#include <ctype.h>
 #include <err.h>
-#else
-/* Adapt from NetBSD or OpenBSD implementation */
-/* https://nxr.netbsd.org/xref/src/lib/libc/gen/err.c */
-#endif
 
 #ifndef SEXP_H
 #define SEXP_H
